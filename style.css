@@ -1,24 +1,53 @@
-#image-table {
-    border-collapse: collapse;
-    table-layout: fixed;
-    height: 100%;
-    max-height: 20px;
-    table-layout: fixed;
-    height: 100%;
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+#header {
+    background-color: #141517;
+    padding: 10px;
+    ;
+    border-bottom: 8px solid #101010;
+    margin-bottom: 30px;
 }
 
-td,
-th {
-    padding: 0px;
+body {
+    background-color: #1d1f21;
+    color: #bbbbbb;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
 }
 
-#image-table img {
-    display: block;
+.canvas-container {
+    max-width: 100%;
+}
+
+#imageCanvas {
     max-width: 100%;
     height: auto;
-    max-height: 300px;
+    max-height: 1000px;
+    /*image-rendering: pixelated;*/
 }
+
+h1 {
+    text-transform: uppercase;
+}
+
 
 .input-field {
     width: 50px;
+}
+
+/*Scrollbar*/
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f0f0f;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #313131;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
