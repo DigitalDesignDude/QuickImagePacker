@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>Quick Image Packer</title>
+</head>
+
+<body>
+    <!--INTRO INFORMATION -->
+    <h1>Quick Image Packer</h1>
+    <p>A simple web app for combining multiple uploaded images into a single image, sprite sheet, or texture atlas.</p>
+
+    <!--CONTROLS-->
+    <div style="margin-bottom: 30px;">
+
+        <input type="file" id="imageInput" accept="image/*" multiple>
+        <label for="rows">Rows:</label>
+        <input class="input-field" type="number" id="rows" min="1" value="1">
+        <label for="columns">Columns:</label>
+        <input class="input-field" type="number" id="columns" min="1" value="100">
+        <button id="arrangeButton">Arrange Images</button>
+        <label>
+            <input type="checkbox" class="checkbox" id="grid-toggler" onchange="toggleGrid()">
+            Grid Lines
+        </label>
+        <label>
+            <input type="checkbox" class="checkbox" id="zig-toggler" onchange="arrangeImages()">
+            Zig Zag Order
+        </label>
+
+        <button id="downloadButton">Download Combined Image</button>
+    </div>
+
+    <!--Image Table-->
+    <div id="table-container">
+        <table id="image-table"></table>
+    </div>
+
+    <script>
+        document.getElementById('imageInput').addEventListener('change', handleFileSelect);
+        document.getElementById('arrangeButton').addEventListener('click', arrangeImages);
+        document.getElementById('downloadButton').addEventListener('click', downloadCombinedImage);
+
+        let images = [];
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+
+            if (!files || files.length === 0) {
+                return;
+            }
+
+            //Sort Image Files By Filename
+            images = Array.from(files).sort((a, b) => a.name.localeCompare(b.name))
+                .map(file => {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    return img;
+                });
+            arrangeImages();
+        }
+
+        function arrangeImages() {
+            const rows = parseInt(document.getElementById('rows').value, 10);
+            const columns = parseInt(document.getElementById('columns').value, 10);
+
+            const imageTable = document.getElementById('image-table');
+            imageTable.innerHTML = ''; // Clear previous images
+
+            var ReverseX = false;
+
+            for (let i = 0; i < rows; i++) {
+                const row = imageTable.insertRow(i);
+
+                //Reserve Row Direction if enabled
+                if (ReverseX == true && document.getElementById('zig-toggler').checked) {
+                    //Create Cells Going Left
+                    for (let j = 0; j < columns; j++) {
+                        const cell = row.insertCell(0);
+                        const imgIndex = i * columns + j;
+                        if (imgIndex < images.length) {
+                            cell.appendChild(images[imgIndex]);
+                        }
+
+                        //Signify Reverse Direction
+                        if (j == 0) {
+                            ReverseX = false;
+                            console.log("Reverse false");
+                        }
+                    }
+                } else {
+                    //Create Cells Going Right
+                    for (let j = 0; j < columns; j++) {
+                        const cell = row.insertCell(j);
+                        const imgIndex = i * columns + j;
+                        if (imgIndex < images.length) {
+                            cell.appendChild(images[imgIndex]);
+
+                            //Signify Reverse Direction
+                            if (j == columns - 1) {
+                                ReverseX = true;
+                                console.log("Reverse true");
+                            }
+                        }
+                    }
+                }
+            }
+            toggleGrid();
+        }
+
+        function downloadCombinedImage() {
+            const rows = parseInt(document.getElementById('rows').value, 10);
+            const columns = parseInt(document.getElementById('columns').value, 10);
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            let imageWidth = images[0].naturalWidth;
+            let imageHeight = images[0].naturalHeight;
+
+            // Set canvas size to fit all images based on one's actual image file dimensions
+            canvas.width = columns * imageWidth;
+            canvas.height = rows * imageHeight;
+
+            // Draw each image onto the canvas based on the arranged layout
+            let currentX = 0;
+            let currentY = 0;
+            let ReverseX = false;
+
+            for (let i = 0; i < rows; i++) {
+
+                //Reserve Row Direction if enabled
+                if (ReverseX == true && document.getElementById('zig-toggler').checked) {
+                    //Create images Going Left
+                    for (let j = 0; j < columns; j++) {
+                        const imgIndex = i * columns + j;
+                        if (imgIndex < images.length) {
+                            context.drawImage(images[imgIndex], imageWidth * (columns - 1) - j * imageWidth, i * imageHeight);
+                        }
+                        //Signify Reverse Direction
+                        if (j == 0) {
+                            ReverseX = false;
+                            console.log("Reverse false");
+                        }
+                    }
+                } else {
+                    //Create images Going Right
+                    for (let j = 0; j < columns; j++) {
+                        const imgIndex = i * columns + j;
+                        if (imgIndex < images.length) {
+                            context.drawImage(images[imgIndex], j * imageWidth, i * imageHeight);
+                        }
+                        //Signify Reverse Direction
+                        if (j == columns - 1) {
+                            ReverseX = true;
+                            console.log("Reverse true");
+                        }
+                    }
+                }
+            }
+
+            // Convert canvas to data URL and create a download link
+            const combinedDataURL = canvas.toDataURL('image/png');
+            const downloadLink = document.createElement('a');
+            downloadLink.href = combinedDataURL;
+            downloadLink.download = 'combined_image.png';
+            downloadLink.click();
+        }
+
+        function toggleGrid() {
+
+            var elements = document.getElementsByTagName('td');
+
+            if (document.getElementById('grid-toggler').checked) {
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].style.border = '1px solid red';
+                }
+            } else {
+                for (var i = 0; i < elements.length; i++) {
+                    elements[i].style.border = '0';
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
