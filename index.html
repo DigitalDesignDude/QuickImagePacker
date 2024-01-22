@@ -1,64 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Quick Image Packer</title>
 </head>
-
 <body>
-    <div id="header">
-        <!--INTRO INFORMATION -->
-        <h1>Quick Image Packer</h1>
-        <p>A simple web app for combining multiple uploaded images into a single image, sprite sheet, or texture atlas.</p>
+    <div id="main-content" class="has-sidebar">
+        <div id="menu-container">
+            <div id="menu">
 
-        <!--CONTROLS-->
-        <div style="margin-bottom: 30px;">
+                <!--INTRO INFORMATION -->
+                <h1><i class="icon-logo"></i> Quick Image Packer </h1>
+                <p style="margin-bottom: 30px;">A simple web app for combining images of the same size into a single image, sprite sheet, or texture atlas.</p>
 
-            <input type="file" id="imageInput" accept="image/*" multiple>
-            <label for="rows">Rows:</label>
-            <input class="input-field" type="number" id="rows" min="1" value="3" oninput="arrangeImages()">
-            <label for="columns">Columns:</label>
-            <input class="input-field" type="number" id="columns" min="1" value="3" oninput="arrangeImages()">
-            <label>
-                <input type="checkbox" class="checkbox" id="zig-toggler" oninput="arrangeImages()">
-                Zig Zag Order
-            </label>
+                <!--CONTROLS-->
+                <div style="margin-bottom: 30px;">
+                    <div>
+                        <input type="file" id="imageInput" accept="image/*" multiple style="margin-bottom: 10px;">
+                        <button id="download-btn" class="btn-primary" style="float: right;">Download Image</button>
+                    </div>
+                    <h3>Arrangement</h3>
+                    <div class="input-group">
+                        <label for="rows">Rows:</label>
+                        <input class="input-field" type="number" id="rows" min="1" value="3" oninput="arrangeImages()">
+                    </div>
+                    <div class="input-group">
+                        <label for="columns">Columns:</label>
+                        <input class="input-field" type="number" id="columns" min="1" value="3" oninput="arrangeImages()">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Zig Zag Order:
+                            <input type="checkbox" id="zig-toggler" oninput="arrangeImages()">
+                        </label>
+                    </div>
+                </div>
+
+                <!--CROPPING CONTROLS-->
+                <div style="margin-bottom: 30px;">
+                    <h3>Cropping</h3>
+                    <div class="input-group">
+                        <label for="crop-top">Top:</label>
+                        <input class="input-field" type="number" id="crop-top" min="0" value="0" oninput="arrangeImages()">
+                    </div>
+                    <div class="input-group">
+                        <label for="crop-bottom">Bottom:</label>
+                        <input class="input-field" type="number" id="crop-bottom" min="0" value="0" oninput="arrangeImages()">
+                    </div>
+                    <div class="input-group">
+                        <label for="crop-left">Left:</label>
+                        <input class="input-field" type="number" id="crop-left" min="0" value="0" oninput="arrangeImages()">
+                    </div>
+                    <div class="input-group">
+                        <label for="crop-right">Right:</label>
+                        <input class="input-field" type="number" id="crop-right" min="0" value="0" oninput="arrangeImages()">
+                    </div>
+                </div>
+
+                <!--VIEW OPTIONS-->
+                <div style="margin-bottom: 30px;">
+                    <h3>View Options</h3>
+                    <div class="input-group">
+                        <label>
+                            Allow Smoothing:
+                            <input type="checkbox" checked id="smooth-toggler" oninput="toggleSmoothing()">
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <label for="zoomSlider">Zoom Level:</label>
+                        <input type="range" id="zoom-slider" min="0.1" max="10.0" step="0.1" value="1" oninput="setCanvasZoom()">
+                        <span style="float: right;" id="zoom-value">100%</span>
+                    </div>
+                </div>
+                <div id="menu-footer">
+                    Site by <a href="https://github.com/DigitalDesignDude">DigitalDesignDude</a>
+                </div>
+            </div>
+            <div id="menu-toggler" style="content: url('images/img-arrow-left.svg');" onclick="toggleMenu()"></div>
         </div>
 
-        <!--CROPPING CONTROLS-->
-        <div style="margin-bottom: 30px;">
-            <h2>Crop Settings</h2>
-            <label for="cropTop">Top:</label>
-            <input class="input-field" type="number" id="cropTop" min="0" value="0" oninput="arrangeImages()">
-            <label for="cropBottom">Bottom:</label>
-            <input class="input-field" type="number" id="cropBottom" min="0" value="0" oninput="arrangeImages()">
-            <label for="cropLeft">Left:</label>
-            <input class="input-field" type="number" id="cropLeft" min="0" value="0" oninput="arrangeImages()">
-            <label for="cropRight">Right:</label>
-            <input class="input-field" type="number" id="cropRight" min="0" value="0" oninput="arrangeImages()">
+        <!--Image Canvas-->
+        <div class="canvas-container">
+            <!--COLLAPSE HEADER TOGGLER-->
+            <canvas id="image-canvas"></canvas>
         </div>
-        <div>
-            <button id="downloadButton">Download Combined Image</button>
-        </div>
-    </div>
 
-    <!--Image Canvas-->
-    <div class="canvas-container">
-        <canvas id="imageCanvas"></canvas>
     </div>
 
     <script>
         document.getElementById('imageInput').addEventListener('change', handleFileSelect);
-        document.getElementById('downloadButton').addEventListener('click', downloadCombinedImage);
+        document.getElementById('download-btn').addEventListener('click', downloadCombinedImage);
 
         //Array to Store all the images in
         let images = [];
-        let loadedImages = 0;
 
         function handleFileSelect(event) {
+            let loadedImages = 0;
             const files = event.target.files;
 
             if (!files || files.length === 0) {
@@ -87,13 +126,12 @@
             //Get References to all the Control Settings
             const rows = parseInt(document.getElementById('rows').value, 10);
             const columns = parseInt(document.getElementById('columns').value, 10);
-            const cropTop = parseInt(document.getElementById('cropTop').value, 10);
-            const cropBottom = parseInt(document.getElementById('cropBottom').value, 10);
-            const cropLeft = parseInt(document.getElementById('cropLeft').value, 10);
-            const cropRight = parseInt(document.getElementById('cropRight').value, 10);
+            const cropTop = parseInt(document.getElementById('crop-top').value, 10);
+            const cropBottom = parseInt(document.getElementById('crop-bottom').value, 10);
+            const cropLeft = parseInt(document.getElementById('crop-left').value, 10);
+            const cropRight = parseInt(document.getElementById('crop-right').value, 10);
 
-
-            const imageCanvas = document.getElementById('imageCanvas');
+            const imageCanvas = document.getElementById('image-canvas');
             const context = imageCanvas.getContext('2d');
 
             let imageWidth = images[0].naturalWidth - cropLeft - cropRight;
@@ -169,14 +207,42 @@
         function downloadCombinedImage() {
 
             // Convert canvas to data URL and create a download link
-            const imageCanvas = document.getElementById('imageCanvas');
+            const imageCanvas = document.getElementById('image-canvas');
             const combinedDataURL = imageCanvas.toDataURL('image/png');
             const downloadLink = document.createElement('a');
             downloadLink.href = combinedDataURL;
             downloadLink.download = 'combined_image.png';
             downloadLink.click();
         }
+
+
+        function toggleMenu() {
+            document.getElementById("main-content").classList.toggle("has-sidebar");
+            document.getElementById("menu-container").classList.toggle("collapse");
+            document.getElementById("menu-toggler").classList.toggle("flipped");
+        }
+
+        function toggleSmoothing() {
+            if (document.getElementById('smooth-toggler').checked) {
+                document.getElementById("image-canvas").style.imageRendering = "auto";
+            } else {
+                document.getElementById("image-canvas").style.imageRendering = "pixelated";
+            }
+        }
+
+        function setCanvasZoom() {
+
+            const zoomSlider = document.getElementById('zoom-slider');
+            const zoomValueSpan = document.getElementById('zoom-value');
+            const imageCanvas = document.getElementById('image-canvas');
+
+            let zoomValue = parseFloat(zoomSlider.value);
+
+            //Set the width and height of the actual canvas according to the input zoom value.
+            imageCanvas.style.width = `${imageCanvas.width * zoomValue}px`;
+            //Update the zoom slider text with no additional decimal places. 
+            zoomValueSpan.textContent = (zoomValue * 100).toFixed(0) + "%";
+        }
     </script>
 </body>
-
 </html>
