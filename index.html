@@ -1,11 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <!--STANDARD META TAGS-->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta name="google-site-verification" content="BlFlpxQYGdtVzN8Uv22-6tgt8hyg7Pf2b1p-rpqrXSc" />
     <title>Quick Image Packer</title>
+
+    <!--FAVICONS-->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/favicon.png">
+
+    <!--INFO META TAGS -->
+    <meta name="description" content="A simple web app for combining images of the same size into an image grid, sprite sheet, or texture atlas.">
+    <meta name="author" content="DigitalDesignDude">
+    <meta name="keywords" content="quick image packer, image packer, packer, images, app, online, generator, spritesheet, sprite sheet, spritesheet packer, sprite frame, texture atlas, texture packer, texture, image grid, grid, row, column, combine, crop, trim">
+
+    <!--SOCIAL SNIPPET META TAGS-->
+    <meta property="og:site_name" content="Quick Image Packer">
+    <meta property="og:title" content="Quick Image Packer">
+    <meta property="og:description" content="A simple web app for combining images of the same size into an image grid, sprite sheet, or texture atlas.">
+    <link rel="canonical" href="https://digitaldesigndude.github.io/QuickImagePacker/">
+    <meta property="og:url" content="https://digitaldesigndude.github.io/QuickImagePacker/">
+    <meta property="og:image" content="https://digitaldesigndude.github.io/QuickImagePacker/images/screenshot-quick-image-packer.png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="640">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+
+    <meta name="twitter:title" content="Quick Image Packer">
+    <meta name="twitter:description" content="A simple web app for combining images of the same size into an image grid, sprite sheet, or texture atlas.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://digitaldesigndude.github.io/QuickImagePacker/images/screenshot-quick-image-packer.png">
+
+    <!--STYLING-->
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
+
 <body>
     <div id="main-content" class="has-sidebar">
         <div id="menu-container">
@@ -13,7 +45,7 @@
 
                 <!--INTRO INFORMATION -->
                 <h1><i class="icon-logo"></i> Quick Image Packer </h1>
-                <p style="margin-bottom: 30px;">A simple web app for combining images of the same size into a single image, sprite sheet, or texture atlas.</p>
+                <p style="margin-bottom: 30px;">A simple web app for combining images of the same size into an image grid, sprite sheet, or texture atlas.</p>
 
                 <!--CONTROLS-->
                 <div style="margin-bottom: 30px;">
@@ -21,20 +53,36 @@
                         <input type="file" id="imageInput" accept="image/*" multiple style="margin-bottom: 10px;">
                         <button id="download-btn" class="btn-primary" style="float: right;">Download Image</button>
                     </div>
-                    <h3>Arrangement</h3>
+                    <h3>Image Grid Options</h3>
                     <div class="input-group">
                         <label for="rows">Rows:</label>
-                        <input class="input-field" type="number" id="rows" min="1" value="3" oninput="arrangeImages()">
+                        <input class="input-field" type="number" id="rows" min="1" value="10" oninput="arrangeImages()">
                     </div>
                     <div class="input-group">
                         <label for="columns">Columns:</label>
-                        <input class="input-field" type="number" id="columns" min="1" value="3" oninput="arrangeImages()">
+                        <input class="input-field" type="number" id="columns" min="1" value="10" oninput="arrangeImages()">
                     </div>
                     <div class="input-group">
                         <label>
                             Zig Zag Order:
                             <input type="checkbox" id="zig-toggler" oninput="arrangeImages()">
                         </label>
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Add Grid Lines:
+                            <input type="checkbox" id="grid-toggler" oninput="arrangeImages()">
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Grid Line Color:
+                            <input type="color" checked id="grid-color-input" value="#00FFFF" oninput="arrangeImages()">
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <label for="grid-size-input">Grid Line Size:</label>
+                        <input class="input-field" type="number" id="grid-size-input" min="1" value="1" oninput="arrangeImages()">
                     </div>
                 </div>
 
@@ -69,6 +117,12 @@
                         </label>
                     </div>
                     <div class="input-group">
+                        <label>
+                            Auto Fit to View:
+                            <input type="checkbox" checked id="fit-view-toggler" oninput="toggleFitView()">
+                        </label>
+                    </div>
+                    <div class="input-group">
                         <label for="zoomSlider">Zoom Level:</label>
                         <input type="range" id="zoom-slider" min="0.1" max="10.0" step="0.1" value="1" oninput="setCanvasZoom()">
                         <span style="float: right;" id="zoom-value">100%</span>
@@ -84,7 +138,7 @@
         <!--Image Canvas-->
         <div class="canvas-container">
             <!--COLLAPSE HEADER TOGGLER-->
-            <canvas id="image-canvas"></canvas>
+            <canvas id="image-canvas" class="fit-view"></canvas>
         </div>
 
     </div>
@@ -97,32 +151,44 @@
         let images = [];
 
         function handleFileSelect(event) {
-            let loadedImages = 0;
             const files = event.target.files;
 
             if (!files || files.length === 0) {
                 return;
             }
 
-            // Reset the images array everytime images are uploaded
+            // Reset the images array everytime images are uploaded.
             images = [];
 
-            //Sort images in order of filename and arrange them after they have all been loaded
-            images = Array.from(files).sort((a, b) => a.name.localeCompare(b.name))
-                .map(file => {
-                    const img = new Image();
-                    img.onload = function() {
-                        loadedImages++;
-                        if (loadedImages === images.length) {
-                            arrangeImages();
-                        }
-                    };
-                    img.src = URL.createObjectURL(file);
-                    return img;
+            loadedImages = 0;
+
+            // Sort files based on filenames using numeric option.
+            const sortedFiles = Array.from(files).sort((a, b) => {
+                return a.name.localeCompare(b.name, undefined, {
+                    numeric: true,
+                    sensitivity: 'base'
                 });
+            });
+
+            images = sortedFiles.map(file => {
+                const img = new Image();
+                img.onload = function() {
+                    loadedImages++;
+                    if (loadedImages === images.length) {
+                        arrangeImages();
+                    }
+                };
+                img.src = URL.createObjectURL(file);
+                return img;
+            });
         }
 
         function arrangeImages() {
+
+            if (images.length === 0) {
+                return; // Exit the function if there are no images.
+            }
+
             //Get References to all the Control Settings
             const rows = parseInt(document.getElementById('rows').value, 10);
             const columns = parseInt(document.getElementById('columns').value, 10);
@@ -133,6 +199,11 @@
 
             const imageCanvas = document.getElementById('image-canvas');
             const context = imageCanvas.getContext('2d');
+
+            /*Grid Inputs*/
+            const gridToggler = document.getElementById('grid-toggler');
+            const gridColorInput = document.getElementById('grid-color-input');
+            const gridSizeInput = document.getElementById('grid-size-input');
 
             let imageWidth = images[0].naturalWidth - cropLeft - cropRight;
             let imageHeight = images[0].naturalHeight - cropTop - cropBottom;
@@ -157,17 +228,35 @@
 
                             //Draw the Image to the canvas at the proper position and cropping using the draw image clipping method
                             const img = images[imgIndex];
+                            let x = imageWidth * (columns - 1) - j * imageWidth;
+                            let y = i * imageHeight;
+                            let width = img.width - cropLeft - cropRight;
+                            let height = img.height - cropTop - cropBottom;
 
                             context.drawImage(img,
                                 cropLeft,
                                 cropTop,
                                 img.width - cropLeft - cropRight,
                                 img.height - cropTop - cropBottom,
-                                imageWidth * (columns - 1) - j * imageWidth,
-                                i * imageHeight,
-                                img.width - cropLeft - cropRight,
-                                img.height - cropTop - cropBottom
+                                x,
+                                y,
+                                width,
+                                height
                             );
+
+                            // Draw Gridlines if enabled
+                            if (gridToggler.checked) {
+                                context.strokeStyle = gridColorInput.value;
+                                context.lineWidth = gridSizeInput.value;
+                                context.strokeRect(
+                                    x + 0.5,
+                                    y + 0.5,
+                                    width - 1,
+                                    height - 1
+                                );
+                            }
+
+
                         }
                         //Signify Reverse Direction
                         if (j == 0) {
@@ -182,17 +271,33 @@
                         if (imgIndex < images.length) {
 
                             const img = images[imgIndex];
+                            let x = j * imageWidth;
+                            let y = i * imageHeight;
+                            let width = img.width - cropLeft - cropRight;
+                            let height = img.height - cropTop - cropBottom;
 
                             context.drawImage(img,
                                 cropLeft,
                                 cropTop,
                                 img.width - cropLeft - cropRight,
                                 img.height - cropTop - cropBottom,
-                                j * imageWidth,
-                                i * imageHeight,
-                                img.width - cropLeft - cropRight,
-                                img.height - cropTop - cropBottom
+                                x,
+                                y,
+                                width,
+                                height
                             );
+
+                            // Draw Gridlines if enabled
+                            if (gridToggler.checked) {
+                                context.strokeStyle = gridColorInput.value;
+                                context.lineWidth = gridSizeInput.value;
+                                context.strokeRect(
+                                    x + 0.5,
+                                    y + 0.5,
+                                    width - 1,
+                                    height - 1
+                                );
+                            }
                         }
                         //Signify Reverse Direction
                         if (j == columns - 1) {
@@ -230,6 +335,14 @@
             }
         }
 
+        function toggleFitView() {
+            if (document.getElementById('fit-view-toggler').checked) {
+                document.getElementById("image-canvas").classList.add('fit-view');
+            } else {
+                document.getElementById("image-canvas").classList.remove('fit-view');
+            }
+        }
+
         function setCanvasZoom() {
 
             const zoomSlider = document.getElementById('zoom-slider');
@@ -242,7 +355,12 @@
             imageCanvas.style.width = `${imageCanvas.width * zoomValue}px`;
             //Update the zoom slider text with no additional decimal places. 
             zoomValueSpan.textContent = (zoomValue * 100).toFixed(0) + "%";
+
+            //Remove Fit View class to allow the canvas to be scaled without restraint.
+            document.getElementById("image-canvas").classList.remove('fit-view');
+            document.getElementById('fit-view-toggler').checked = false;
         }
     </script>
 </body>
+
 </html>
