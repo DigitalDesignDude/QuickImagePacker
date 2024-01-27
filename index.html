@@ -9,8 +9,10 @@
     <title>Quick Image Packer</title>
 
     <!--FAVICONS-->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="shortcut icon" type="image/png" href="https://digitaldesigndude.github.io/QuickImagePacker/favicon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://digitaldesigndude.github.io/QuickImagePacker/favicon-192x192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://digitaldesigndude.github.io/QuickImagePacker/favicon-180x180.png">
 
     <!--INFO META TAGS -->
     <meta name="description" content="A simple web app for combining images of the same size into an image grid, sprite sheet, or texture atlas.">
@@ -56,11 +58,11 @@
                     <h3>Image Grid Options</h3>
                     <div class="input-group">
                         <label for="rows">Rows:</label>
-                        <input class="input-field" type="number" id="rows" min="1" value="10" oninput="arrangeImages()">
+                        <input class="input-field" type="number" id="rows" min="1" value="3" oninput="arrangeImages()">
                     </div>
                     <div class="input-group">
                         <label for="columns">Columns:</label>
-                        <input class="input-field" type="number" id="columns" min="1" value="10" oninput="arrangeImages()">
+                        <input class="input-field" type="number" id="columns" min="1" value="3" oninput="arrangeImages()">
                     </div>
                     <div class="input-group">
                         <label>
@@ -136,7 +138,7 @@
         </div>
 
         <!--Image Canvas-->
-        <div class="canvas-container">
+        <div id="canvas-container">
             <!--COLLAPSE HEADER TOGGLER-->
             <canvas id="image-canvas" class="fit-view"></canvas>
         </div>
@@ -146,6 +148,10 @@
     <script>
         document.getElementById('imageInput').addEventListener('change', handleFileSelect);
         document.getElementById('download-btn').addEventListener('click', downloadCombinedImage);
+
+        const container = document.getElementById('canvas-container');
+        const imageCanvas = document.getElementById('image-canvas');
+        const context = imageCanvas.getContext('2d');
 
         //Array to Store all the images in
         let images = [];
@@ -196,9 +202,6 @@
             const cropBottom = parseInt(document.getElementById('crop-bottom').value, 10);
             const cropLeft = parseInt(document.getElementById('crop-left').value, 10);
             const cropRight = parseInt(document.getElementById('crop-right').value, 10);
-
-            const imageCanvas = document.getElementById('image-canvas');
-            const context = imageCanvas.getContext('2d');
 
             /*Grid Inputs*/
             const gridToggler = document.getElementById('grid-toggler');
@@ -255,8 +258,6 @@
                                     height - 1
                                 );
                             }
-
-
                         }
                         //Signify Reverse Direction
                         if (j == 0) {
@@ -312,14 +313,12 @@
         function downloadCombinedImage() {
 
             // Convert canvas to data URL and create a download link
-            const imageCanvas = document.getElementById('image-canvas');
             const combinedDataURL = imageCanvas.toDataURL('image/png');
             const downloadLink = document.createElement('a');
             downloadLink.href = combinedDataURL;
             downloadLink.download = 'combined_image.png';
             downloadLink.click();
         }
-
 
         function toggleMenu() {
             document.getElementById("main-content").classList.toggle("has-sidebar");
@@ -347,12 +346,20 @@
 
             const zoomSlider = document.getElementById('zoom-slider');
             const zoomValueSpan = document.getElementById('zoom-value');
-            const imageCanvas = document.getElementById('image-canvas');
+
+            // Store the initial scroll position
+            const scrollLeftPercentage = container.scrollLeft / (container.scrollWidth - container.clientWidth);
+            const scrollTopPercentage = container.scrollTop / (container.scrollHeight - container.clientHeight);
 
             let zoomValue = parseFloat(zoomSlider.value);
 
             //Set the width and height of the actual canvas according to the input zoom value.
             imageCanvas.style.width = `${imageCanvas.width * zoomValue}px`;
+
+            // Restore the scroll position by setting the scroll position based on the previous percentage
+            container.scrollLeft = scrollLeftPercentage * (container.scrollWidth - container.clientWidth);
+            container.scrollTop = scrollTopPercentage * (container.scrollHeight - container.clientHeight);
+
             //Update the zoom slider text with no additional decimal places. 
             zoomValueSpan.textContent = (zoomValue * 100).toFixed(0) + "%";
 
@@ -360,6 +367,38 @@
             document.getElementById("image-canvas").classList.remove('fit-view');
             document.getElementById('fit-view-toggler').checked = false;
         }
+
+        //PANNING VIEW RELATED ==========================================================
+        let isPanning = false;
+        let startPanX, startPanY;
+
+        function handleMouseDown(event) {
+            if (event.button === 0) { // left mouse button
+                event.preventDefault(); // Prevent default behavior
+                isPanning = true;
+                startPanX = event.clientX + container.scrollLeft;
+                startPanY = event.clientY + container.scrollTop;
+                imageCanvas.style.cursor = 'grabbing'; 
+            }
+        }
+
+        function handleMouseMove(event) {
+            if (isPanning) {
+                const newPanX = startPanX - event.clientX;
+                const newPanY = startPanY - event.clientY;
+                container.scrollLeft = newPanX;
+                container.scrollTop = newPanY;
+            }
+        }
+
+        function handleMouseUp() {
+            isPanning = false;
+            imageCanvas.style.cursor = 'grab';
+        }
+
+        imageCanvas.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
     </script>
 </body>
 

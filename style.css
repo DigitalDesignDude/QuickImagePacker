@@ -97,7 +97,7 @@ body {
 
 
 /*CANVAS ---------------------*/
-.canvas-container {
+#canvas-container {
     max-width: 100%;
     max-height: 100vh;
     position: relative;
@@ -107,7 +107,7 @@ body {
 #image-canvas {
     /*max-width: 100%;*/
     height: auto;
-    /*max-height: 1000px;*/  
+    /*max-height: 1000px;*/ 
 }
 
 #image-canvas.fit-view{
