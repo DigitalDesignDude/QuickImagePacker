@@ -41,7 +41,7 @@
 </head>
 
 <body>
-    <div id="main-content" class="has-sidebar">
+    <div id="main-content" class="menu-opened">
         <div id="menu-container">
             <div id="menu">
 
@@ -134,7 +134,9 @@
                     Site by <a href="https://github.com/DigitalDesignDude">DigitalDesignDude</a>
                 </div>
             </div>
-            <div id="menu-toggler" style="content: url('images/img-arrow-left.svg');" onclick="toggleMenu()"></div>
+            <div id="menu-toggler" onclick="toggleMenu()">
+                <div class="arrow"></div>
+            </div>
         </div>
 
         <!--Image Canvas-->
@@ -311,7 +313,6 @@
         }
 
         function downloadCombinedImage() {
-
             // Convert canvas to data URL and create a download link
             const combinedDataURL = imageCanvas.toDataURL('image/png');
             const downloadLink = document.createElement('a');
@@ -321,7 +322,7 @@
         }
 
         function toggleMenu() {
-            document.getElementById("main-content").classList.toggle("has-sidebar");
+            document.getElementById("main-content").classList.toggle("menu-opened");
             document.getElementById("menu-container").classList.toggle("collapse");
             document.getElementById("menu-toggler").classList.toggle("flipped");
         }
@@ -342,16 +343,18 @@
             }
         }
 
+        //CANVAS ZOOM ========================================================================================
+
+        const zoomSlider = document.getElementById('zoom-slider');
+        const zoomValueSpan = document.getElementById('zoom-value');
+
         function setCanvasZoom() {
 
-            const zoomSlider = document.getElementById('zoom-slider');
-            const zoomValueSpan = document.getElementById('zoom-value');
+            let zoomValue = parseFloat(zoomSlider.value);
 
             // Store the initial scroll position
             const scrollLeftPercentage = container.scrollLeft / (container.scrollWidth - container.clientWidth);
             const scrollTopPercentage = container.scrollTop / (container.scrollHeight - container.clientHeight);
-
-            let zoomValue = parseFloat(zoomSlider.value);
 
             //Set the width and height of the actual canvas according to the input zoom value.
             imageCanvas.style.width = `${imageCanvas.width * zoomValue}px`;
@@ -368,7 +371,26 @@
             document.getElementById('fit-view-toggler').checked = false;
         }
 
-        //PANNING VIEW RELATED ==========================================================
+        //ZOOM WITH MOUSE WHEEL
+        container.addEventListener("wheel", function(e) {
+            if (event.ctrlKey || event.altKey) {
+
+                if (e.deltaY < 0) {
+                    zoomSlider.valueAsNumber += 0.1;
+                } else {
+                    zoomSlider.value -= 0.1;
+                }
+                e.preventDefault(); // Prevent default behavior
+                e.stopPropagation();
+                setCanvasZoom();
+            }
+        }, {
+            passive: false
+        }); //Solves passive event listener warning.
+
+
+        //PANNING VIEW ==========================================================
+        
         let isPanning = false;
         let startPanX, startPanY;
 
@@ -378,7 +400,7 @@
                 isPanning = true;
                 startPanX = event.clientX + container.scrollLeft;
                 startPanY = event.clientY + container.scrollTop;
-                imageCanvas.style.cursor = 'grabbing'; 
+                imageCanvas.style.cursor = 'grabbing';
             }
         }
 

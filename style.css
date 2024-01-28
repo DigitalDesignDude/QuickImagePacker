@@ -12,7 +12,7 @@
 /*MAIN ELEMENTS--------------*/
 :root {
     --menu-width: 400px;
-    --menu-toggler-width: 20px;
+    --menu-toggler-size: 20px;
 }
 
 body {
@@ -23,19 +23,20 @@ body {
 }
 
 #main-content {
-    padding-left: var(--menu-toggler-width);
+    padding-left: var(--menu-toggler-size);
     transition: padding-left 0.3s ease;
 }
 
-#main-content.has-sidebar {
-    padding-left: calc(var(--menu-width) + var(--menu-toggler-width));
+#main-content.menu-opened {
+    padding-left: calc(var(--menu-width) + var(--menu-toggler-size));
 }
 
+/*MENU RELATED-----------*/
 #menu-container {
     position: fixed;
     top: 0px;
     left: 0px;
-    transition: left 0.3s;
+    transition: left 0.3s ease;
     height: 100vh;
     z-index: 99999;
 }
@@ -69,10 +70,15 @@ body {
     display: none;
 }
 
+#menu-footer {
+    margin-top: auto;
+}
+
+/*MENU TOGGLER----------------*/
 #menu-toggler {
     background-color: #0e0f10;
     text-align: center;
-    width: var(--menu-toggler-width);
+    width: var(--menu-toggler-size);
     height: 100vh;
     padding: 0px 6px;
     /*transition: transform 0.3s ease;*/
@@ -81,23 +87,27 @@ body {
     left: var(--menu-width);
     box-sizing: border-box;
     z-index: 999999;
+    overflow: hidden;
 }
 
-#menu-toggler.flipped {
+#menu-toggler.flipped .arrow {
     transform: scaleX(-1);
+}
+
+#menu-toggler .arrow {
+    content: url('images/img-arrow-left.svg');
+    width: 100%;
+    height: 100%;
 }
 
 #menu-toggler:hover {
     background-color: #181a1c;
 }
 
-#menu-footer {
-    margin-top: auto;
-}
-
-
 /*CANVAS ---------------------*/
 #canvas-container {
+    width: 100%;
+    height: 100vh;
     max-width: 100%;
     max-height: 100vh;
     position: relative;
@@ -105,24 +115,20 @@ body {
 }
 
 #image-canvas {
-    /*max-width: 100%;*/
     height: auto;
-    /*max-height: 1000px;*/ 
 }
 
-#image-canvas.fit-view{
-     max-height: 100vh;
+#image-canvas.fit-view {
+    max-height: 100vh;
     max-width: 100%;
     height: 100vh;
     object-fit: contain;
-    object-position:left;
+    object-position: left;
     width: 100% !important;
     height: auto;
 }
 
-
 /*HEADINGS---------*/
-
 h1 {
     text-transform: uppercase;
 }
@@ -193,8 +199,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 input[type="color"] {
-   -webkit-appearance: none;
-	border: none;
+    -webkit-appearance: none;
+    border: none;
     max-height: 20px;
     border: 3px solid #252629;
     border-radius: 4px;
@@ -204,17 +210,17 @@ input[type="color"] {
 }
 
 input[type="color"] {
-	-webkit-appearance: none;
+    -webkit-appearance: none;
     padding: 0;
     width: 55px;
 }
 
 input[type="color"]::-webkit-color-swatch-wrapper {
-	padding: 0;
+    padding: 0;
 }
 
 input[type="color"]::-webkit-color-swatch {
-	border: none;
+    border: none;
 }
 
 .btn-primary,
@@ -226,7 +232,7 @@ input[type="file"]::file-selector-button {
     border-radius: 6px;
 }
 
-/*Scrollbars*/
+/*SCROLLBARS-------------*/
 ::-webkit-scrollbar {
     width: 17px;
     height: 17px;
@@ -254,4 +260,71 @@ input[type="file"]::file-selector-button {
     border: 1px solid #0f0f0f;
     height: 17px;
     width: 17px;
+}
+
+
+
+/*MEDIA QUERIES===============================*/
+
+/*Mobile*/
+@media only screen and (max-width: 480px) {
+
+    h1 {
+        font-size: 7.5vw
+    }
+
+    /*MAIN CONTENT------------*/
+    #main-content {
+        transition: padding-top 0.3s ease;
+        padding-left: 0 !important;
+    }
+
+    #main-content.menu-opened {
+        padding-top: calc(50vh + var(--menu-toggler-size));
+    }
+
+    /*MENU RELATED-----------*/
+    #menu-container {
+        width: 100%;
+        max-width: none !impotant;
+        transition: top 0.3s ease;
+        max-height: 50vh;
+    }
+
+    #menu-container.collapse {
+        top: -50vh;
+        left: 0px;
+    }
+
+    #menu {
+        width: 100%;
+        max-height: 50vh;
+    }
+
+    /*MENU TOGGLER------------*/
+    #menu-toggler {
+        top: 50vh;
+        left: 0px;
+        width: 100%;
+        height: 20px;
+    }
+
+    #menu-toggler .arrow {
+        transform: rotate(90deg);
+    }
+
+    #menu-toggler.flipped .arrow {
+        transform: rotate(270deg);
+    }
+
+    /*CANVAS ---------------------*/
+    #canvas-container {
+        max-height: calc(100vh - var(--menu-toggler-size));
+        transition: max-height 0.3s ease;
+    }
+
+    #main-content.menu-opened #canvas-container {
+        max-height: calc(50vh - var(--menu-toggler-size));
+    }
+
 }
